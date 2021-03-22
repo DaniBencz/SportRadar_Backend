@@ -1,0 +1,33 @@
+{
+  "name": "sportradar_backend",
+  "version": "1.0.0",
+  "description": "coding challenge implementation",
+  "main": "compiled/index.js",
+  "scripts": {
+    "test": "jest",
+    "dev": "nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec 'ts-node' src/index.ts",
+    "start": "tsc & node ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DaniBencz/SportRadar_Backend.git"
+  },
+  "author": "Daniel Bencz",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DaniBencz/SportRadar_Backend/issues"
+  },
+  "homepage": "https://github.com/DaniBencz/SportRadar_Backend#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.11",
+    "@types/node": "^14.14.35",
+    "@types/node-fetch": "^2.5.8",
+    "nodemon": "^2.0.7",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.3"
+  }
+}
