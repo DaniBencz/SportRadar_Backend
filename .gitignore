@@ -106,4 +106,5 @@ dist
 # compiled TypeScript files outDir
 compiled/
 
+.DS_Store
 todo.txt

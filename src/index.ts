@@ -6,8 +6,10 @@ const main = (): void => {
     const app = express()
     const port = process.env.PORT || 4040
 
+    app.use(express.static('public'))
+
     app.get('/', (_, res: Response) => {
-        res.status(200).send('hello')
+        res.status(200).sendFile('index.html')
     })
 
     app.get('/tournaments', async (_, res: Response) => {
