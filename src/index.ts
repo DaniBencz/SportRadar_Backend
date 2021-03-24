@@ -1,7 +1,7 @@
 import express from 'express'
 import fetch from 'node-fetch'
 import { Response } from 'express'
-import {getTournamentIDsAndNames} from './services'
+import { getTournamentNamesByID } from './services'
 
 const main = (): void => {
     // dynamic imports?
@@ -17,7 +17,7 @@ const main = (): void => {
 
     app.get('/matches', async (_, res: Response) => {
         const tournamentsAPI = 'https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/config_tournaments/1/17'
-        console.log(await getTournamentIDsAndNames(tournamentsAPI))
+        console.log(await getTournamentNamesByID(tournamentsAPI))
 
         const tournamentID = 30
         const matchesUri = `https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/fixtures_tournament/${tournamentID}/2021`

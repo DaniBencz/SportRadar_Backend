@@ -1,12 +1,12 @@
 import fetch from 'node-fetch'
 
-export const getTournamentIDsAndNames = async (uri: string) => {
+export const getTournamentNamesByID = async (uri: string) => {
     const tournamentsResponse = await fetch(uri)
     const tournamentsJson = await tournamentsResponse.json()
     const {
         tournaments: tournamentsData,
-        uniquetournaments: uniquetournamentsData,
-        cuptrees: cuptreesData
+        uniquetournaments: uniqueTournamentsData,
+        cuptrees: cupTreesData
     } = tournamentsJson.doc[0].data
 
     interface Itournament { _id: number, name: string }
@@ -15,7 +15,13 @@ export const getTournamentIDsAndNames = async (uri: string) => {
         return { ...acc, ...{ [cur._id]: cur.name } }
     }, {})
 
-    // add uniquet/s and cuptrees to tournamentNamesById 
+    Object.keys(uniqueTournamentsData).forEach((id: string) => {
+        if (!tournamentNamesById[id]) tournamentNamesById[id] = uniqueTournamentsData[id].name
+    })
+    
+    Object.keys(cupTreesData).forEach((id: string) => {
+        if (!tournamentNamesById[id]) tournamentNamesById[id] = cupTreesData[id].name
+    })
 
     return tournamentNamesById
 }
