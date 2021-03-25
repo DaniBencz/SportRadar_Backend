@@ -68,6 +68,17 @@ const sortAllMatchesByTimeDescending = (unsortedMatches: IMatch[]) => {
     return [...unsortedMatches].sort((a, b) => b.time.uts - a.time.uts)
 }
 
+const getLastNMatches = (numberOfMatches: number, allMatches: IMatch[]): IMatch[] => {
+    let results: IMatch[] = []
+    let now = Math.round(new Date().getTime() / 1000)
+
+    for (let i = 0; i <= 180; i++) {
+        if (allMatches[i].time.uts <= now) results.push(allMatches[i])
+        if (results.length >= numberOfMatches) break
+    }
+    return results
+}
+
 export const getLastNMatchesGroupedByTournament = async (numberOfMatches: number) => {
     const tournamentsAPI = 'https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/config_tournaments/1/17'
     const tournamentNamesById = await getTournamentNamesByID(tournamentsAPI)
@@ -76,7 +87,10 @@ export const getLastNMatchesGroupedByTournament = async (numberOfMatches: number
     const matchesGroupedByTournamentJson = await filterMatchesDataFromExtensiveData(extensiveMatchDataByTournamentJson)
     const allMatchesUnsorted = getAllMatchesInOneArray(matchesGroupedByTournamentJson)
     const allMatchesSorted = sortAllMatchesByTimeDescending(allMatchesUnsorted)
-    return allMatchesSorted
+    const lastNMatches = getLastNMatches(numberOfMatches, allMatchesSorted)
+    // convert data to expected output
+
+    return lastNMatches
 }
 
 
