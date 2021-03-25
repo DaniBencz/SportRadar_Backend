@@ -12,8 +12,14 @@ app.get('/', (_, res: Response) => {
 })
 
 app.get('/matches', async (_, res: Response) => {
-    const lastFiveMatchesGroupedByTournament = await getLastNMatchesGroupedByTournament(5)
-    res.json(lastFiveMatchesGroupedByTournament)
+    try {
+        const lastFiveMatchesGroupedByTournament = await getLastNMatchesGroupedByTournament(5)
+        res.json(lastFiveMatchesGroupedByTournament)
+    }
+    catch (e) {
+        console.log(e)
+        res.status(500).json({ message: 'Server error, please try again later' })
+    }
 })
 
 app.listen(port, () => console.log(`Running on port ${port}`))
