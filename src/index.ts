@@ -17,15 +17,40 @@ const main = (): void => {
 
     app.get('/matches', async (_, res: Response) => {
         const tournamentsAPI = 'https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/config_tournaments/1/17'
-        console.log(await getTournamentNamesByID(tournamentsAPI))
+        const tournamentNamesById = await getTournamentNamesByID(tournamentsAPI)
 
-        const tournamentID = 30
-        const matchesUri = `https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/fixtures_tournament/${tournamentID}/2021`
-        const matchesResponse = await fetch(matchesUri)
-        const matchesJson = await matchesResponse.json()
-        const matchesData = matchesJson.doc[0].data
+        const extensiveMatchDataByTournamentPromises = Object.keys(tournamentNamesById).map((id: string) => {
+            const matchesUri = `https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/fixtures_tournament/${id}/2021`
+            return fetch(matchesUri)
+        })
 
-        res.json(matchesData)
+        const extensiveMatchDataByTournamentJson = (await Promise.all(extensiveMatchDataByTournamentPromises)).map((matchData) => {
+            return matchData.json()
+        })
+
+        const matchDataByTournamentJson = (await Promise.all(extensiveMatchDataByTournamentJson)).map((data: any) => {
+            if (data?.doc && data?.doc[0]?.data?.matches) return data.doc[0].data.matches
+            else return []
+        })
+
+        res.json(matchDataByTournamentJson)
+
+        /*
+        {
+            Bundesliga: {
+                id1: {
+                    // details
+                },
+                id2: {
+                    // details
+                }
+            },
+            OFB: {
+                id3: {}
+            }
+
+        }
+        */
     })
 
     app.listen(port, () => console.log(`Running on port ${port}`))
