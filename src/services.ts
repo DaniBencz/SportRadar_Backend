@@ -1,8 +1,15 @@
 import fetch from 'node-fetch'
+import { Response } from 'node-fetch'
 
 interface Itournament { _id: number, name: string }
+interface IMatch {
+    _id: number,
+    time: {
+        uts: number
+    }
+}
 
-const getTournamentNamesByID = async (uri: string) => {
+const getTournamentNamesByID = async (uri: string): Promise<{ [key: string]: string }[]> => {
     const tournamentsResponse = await fetch(uri)
     const tournamentsJson = await tournamentsResponse.json()
     const {
@@ -26,41 +33,49 @@ const getTournamentNamesByID = async (uri: string) => {
     return tournamentNamesById
 }
 
-const convertMatchesObjectToArray = (matches: any) => {
-    const matchesArray = Object.keys(matches).map((key) => {
-        return matches[key]
-    })
-    return matchesArray
-}
-
-export const getLastNMatchesGroupedByTournament = async (numberOfMatches: number) => {
-    const tournamentsAPI = 'https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/config_tournaments/1/17'
-    const tournamentNamesById = await getTournamentNamesByID(tournamentsAPI)
-
-    const extensiveMatchDataByTournamentPromises = Object.keys(tournamentNamesById).map((id: string) => {
+const fetchMatchesData = (tournamentNamesById: { [key: string]: string }[]) => {
+    return Object.keys(tournamentNamesById).map((id: string) => {
         const matchesUri = `https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/fixtures_tournament/${id}/2021`
         return fetch(matchesUri)
     })
+}
 
-    const extensiveMatchDataByTournamentJson = (await Promise.all(extensiveMatchDataByTournamentPromises))
-        .map((response) => response.json())
+const convertMatchesResponseToJson = async (responseArray: Promise<Response>[]) => {
+    return (await Promise.all(responseArray)).map((response) => response.json())
+}
 
-    const matchesGroupedByTournamentJson = (await Promise.all(extensiveMatchDataByTournamentJson)).reduce((acc, cur) => {
+const filterMatchesDataFromExtensiveData = async (extensiveData: Promise<any>[]): Promise<IMatch[]> => {
+    return (await Promise.all(extensiveData)).reduce((acc, cur) => {
         if (cur?.doc[0]?.data?.matches) {
             const isMatchesPropertyEmpty = cur?.doc[0]?.data?.matches instanceof Array
             if (!isMatchesPropertyEmpty) return [...acc, cur?.doc[0]?.data?.matches]
             else return acc
         } else return acc
     }, [])
+}
 
-    const allMatchesUnsorted = matchesGroupedByTournamentJson.reduce((acc: [], cur: any) => {
+const getAllMatchesInOneArray = (matchesGroupedByTournament: IMatch[]) => {
+    return matchesGroupedByTournament.reduce((acc: IMatch[], cur: IMatch) => {
         return [...acc, ...convertMatchesObjectToArray(cur)]
     }, [])
+}
 
-    const allMatchesSorted = [...allMatchesUnsorted].sort((a, b) => {
-        return a.time.uts - b.time.uts
-    })
+const convertMatchesObjectToArray = (matches: any) => {
+    return Object.keys(matches).map((key) => matches[key])
+}
 
+const sortAllMatchesByTimeDescending = (unsortedMatches: IMatch[]) => {
+    return [...unsortedMatches].sort((a, b) => b.time.uts - a.time.uts)
+}
+
+export const getLastNMatchesGroupedByTournament = async (numberOfMatches: number) => {
+    const tournamentsAPI = 'https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/config_tournaments/1/17'
+    const tournamentNamesById = await getTournamentNamesByID(tournamentsAPI)
+    const extensiveMatchDataByTournamentResponse = fetchMatchesData(tournamentNamesById)
+    const extensiveMatchDataByTournamentJson = await convertMatchesResponseToJson(extensiveMatchDataByTournamentResponse)
+    const matchesGroupedByTournamentJson = await filterMatchesDataFromExtensiveData(extensiveMatchDataByTournamentJson)
+    const allMatchesUnsorted = getAllMatchesInOneArray(matchesGroupedByTournamentJson)
+    const allMatchesSorted = sortAllMatchesByTimeDescending(allMatchesUnsorted)
     return allMatchesSorted
 }
 
