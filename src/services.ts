@@ -28,10 +28,10 @@ interface IMatchProcessed {
         home: number,
         away: number
     },
-    events: string
+    events: string[]
 }
 
-const getTournamentNamesByID = async (uri: string): Promise<{ [key: string]: string }> => {
+const getTournamentNamesAndIDs = async (uri: string): Promise<{ [key: string]: string }> => {
     const tournamentsResponse = await fetch(uri)
     const tournamentsJson = await tournamentsResponse.json()
     const {
@@ -40,23 +40,23 @@ const getTournamentNamesByID = async (uri: string): Promise<{ [key: string]: str
         cuptrees: cupTreesData
     } = tournamentsJson.doc[0].data
 
-    const tournamentNamesById = tournamentsData.reduce((acc: { _id: number, name: string }, cur: { _id: number, name: string }) => {
+    const tournamentNamesAndIDs = tournamentsData.reduce((acc: { _id: number, name: string }, cur: { _id: number, name: string }) => {
         return { ...acc, ...{ [cur._id]: cur.name } }
     }, {})
 
     Object.keys(uniqueTournamentsData).forEach((id: string) => {
-        if (!tournamentNamesById[id]) tournamentNamesById[id] = uniqueTournamentsData[id].name
+        if (!tournamentNamesAndIDs[id]) tournamentNamesAndIDs[id] = uniqueTournamentsData[id].name
     })
 
     Object.keys(cupTreesData).forEach((id: string) => {
-        if (!tournamentNamesById[id]) tournamentNamesById[id] = cupTreesData[id].name
+        if (!tournamentNamesAndIDs[id]) tournamentNamesAndIDs[id] = cupTreesData[id].name
     })
 
-    return tournamentNamesById
+    return tournamentNamesAndIDs
 }
 
-const fetchMatchesData = (tournamentNamesById: { [key: string]: string }) => {
-    return Object.keys(tournamentNamesById).map((id: string) => {
+const getMatchesData = (tournamentNamesAndIDs: { [key: string]: string }) => {
+    return Object.keys(tournamentNamesAndIDs).map((id: string) => {
         const matchesUri = `https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/fixtures_tournament/${id}/2021`
         return fetch(matchesUri)
     })
@@ -101,22 +101,25 @@ const getLastNMatches = (numberOfMatches: number, allMatches: IMatchRaw[]): IMat
     return results
 }
 
-const convertDataToExpectedOutput = (matchesData: IMatchRaw[], tournamentNamesById: { [key: string]: string }) => {
+const convertDataToExpectedOutput = (matchesData: IMatchRaw[], tournamentNamesAndIDs: { [key: string]: string }) => {
     let tournaments: { [key: string]: IMatchProcessed[] } = {}
 
     matchesData.forEach((match) => {
-        const tournamentName = tournamentNamesById[match._tid]
+      const {_tid, time, teams, result, comment} = match
+        const tournamentName = tournamentNamesAndIDs[_tid]
+        const events = comment.split(',').map((comment) => comment.trim())
+
         const processedMatchData = {
-            dateAndTime: `${match.time.date}: ${match.time.time}`,
+            dateAndTime: `${time.date}: ${time.time}`,
             teams: {
-                home: match.teams.home.name,
-                away: match.teams.away.name
+                home: teams.home.name,
+                away: teams.away.name
             },
             score: {
-                home: match.result.home,
-                away: match.result.away
+                home: result.home,
+                away: result.away
             },
-            events: match.comment,
+            events: events,
         }
 
         if (!tournaments[tournamentName]) {
@@ -128,14 +131,14 @@ const convertDataToExpectedOutput = (matchesData: IMatchRaw[], tournamentNamesBy
 
 export const getLastNMatchesGroupedByTournament = async (numberOfMatches: number) => {
     const tournamentsAPI = 'https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/config_tournaments/1/17'
-    const tournamentNamesById = await getTournamentNamesByID(tournamentsAPI)
-    const extensiveMatchDataByTournamentResponse = fetchMatchesData(tournamentNamesById)
-    const extensiveMatchDataByTournamentJson = await convertMatchesResponseToJson(extensiveMatchDataByTournamentResponse)
-    const matchesGroupedByTournament = await filterMatchesDataFromExtensiveData(extensiveMatchDataByTournamentJson)
+    const tournamentNamesAndIDs = await getTournamentNamesAndIDs(tournamentsAPI)
+    const extensiveMatchDataGroupedByTournamentResponse = getMatchesData(tournamentNamesAndIDs)
+    const extensiveMatchDataGroupedByTournamentJson = await convertMatchesResponseToJson(extensiveMatchDataGroupedByTournamentResponse)
+    const matchesGroupedByTournament = await filterMatchesDataFromExtensiveData(extensiveMatchDataGroupedByTournamentJson)
 
     const allMatchesUnsorted = getAllMatchesInOneArray(matchesGroupedByTournament)
     const allMatchesSorted = sortAllMatchesByTimeDescending(allMatchesUnsorted)
     const lastNMatches = getLastNMatches(numberOfMatches, allMatchesSorted)
-    const normalizedResult = convertDataToExpectedOutput(lastNMatches, tournamentNamesById)
+    const normalizedResult = convertDataToExpectedOutput(lastNMatches, tournamentNamesAndIDs)
     return normalizedResult
 }
