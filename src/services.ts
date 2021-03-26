@@ -11,7 +11,7 @@ interface IMatchRaw {
     teams: {
         home: { name: string },
         away: { name: string }
-    }
+    },
     result: {
         home: number,
         away: number
@@ -76,7 +76,7 @@ const filterMatchesDataFromExtensiveData = async (extensiveData: Promise<any>[])
     }, [])
 }
 
-const convertMatchesObjectToArray = (matches: { [key: string]: IMatchRaw }) => {
+export const convertMatchesObjectToArray = (matches: { [key: string]: IMatchRaw }) => {
     return Object.keys(matches).map((key) => matches[key])
 }
 
@@ -86,7 +86,7 @@ const getAllMatchesInOneArray = (matchesGroupedByTournament: { [key: string]: IM
     }, [])
 }
 
-const sortAllMatchesByTimeDescending = (unsortedMatches: IMatchRaw[]) => {
+export const sortAllMatchesByTimeDescending = (unsortedMatches: IMatchRaw[]) => {
     return [...unsortedMatches].sort((a, b) => b.time.uts - a.time.uts)
 }
 
