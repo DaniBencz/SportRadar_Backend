@@ -1,8 +1,8 @@
 {
   "files": {
-    "main.css": "/static/css/main.cec56e90.chunk.css",
-    "main.js": "/static/js/main.2906bc86.chunk.js",
-    "main.js.map": "/static/js/main.2906bc86.chunk.js.map",
+    "main.css": "/static/css/main.65380679.chunk.css",
+    "main.js": "/static/js/main.eb497797.chunk.js",
+    "main.js.map": "/static/js/main.eb497797.chunk.js.map",
     "runtime-main.js": "/static/js/runtime-main.1a8c2ac2.js",
     "runtime-main.js.map": "/static/js/runtime-main.1a8c2ac2.js.map",
     "static/js/2.3b0441b0.chunk.js": "/static/js/2.3b0441b0.chunk.js",
@@ -10,15 +10,15 @@
     "static/js/3.d570b9cd.chunk.js": "/static/js/3.d570b9cd.chunk.js",
     "static/js/3.d570b9cd.chunk.js.map": "/static/js/3.d570b9cd.chunk.js.map",
     "index.html": "/index.html",
-    "static/css/main.cec56e90.chunk.css.map": "/static/css/main.cec56e90.chunk.css.map",
+    "static/css/main.65380679.chunk.css.map": "/static/css/main.65380679.chunk.css.map",
     "static/js/2.3b0441b0.chunk.js.LICENSE.txt": "/static/js/2.3b0441b0.chunk.js.LICENSE.txt",
     "static/media/Messi.33a64459.jpeg": "/static/media/Messi.33a64459.jpeg",
-    "static/media/banner.31083f0f.jpg": "/static/media/banner.31083f0f.jpg"
+    "static/media/App.css": "/static/media/banner.31083f0f.jpg"
   },
   "entrypoints": [
     "static/js/runtime-main.1a8c2ac2.js",
     "static/js/2.3b0441b0.chunk.js",
-    "static/css/main.cec56e90.chunk.css",
-    "static/js/main.2906bc86.chunk.js"
+    "static/css/main.65380679.chunk.css",
+    "static/js/main.eb497797.chunk.js"
   ]
 }

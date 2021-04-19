@@ -19,7 +19,7 @@ interface IMatchRaw {
   comment: string
 }
 interface IMatchProcessed {
-  dateAndTime: string,
+  uts: number,
   teams: {
     home: string,
     away: string
@@ -106,11 +106,10 @@ const getLastNMatches = (numberOfMatches: number, allMatches: IMatchRaw[]): IMat
 }
 
 // the comment data-field gets verbose sometimes
-// here, this string is broken down to an array of 'widget-sized'  pieces of info
-// according to this example format: '1:0 (18.) M.Toro'
-const parseCommentStringToEventsArray = (comment: string) => {
+// here, this string is broken down to an array of 'widget-sized' pieces of info
+const parseCommentStringToEventsArray = (comment: string): string[] => {
   const eventsRaw = comment.split(',').map((comment) => comment.trim())
-  const regex = /\d:\d\s\(\d\d\.\)\s[a-zA-Z0-9.]+/g
+  const regex = /\d:\d\s\(\d\d\.\)\s[a-zA-Z0-9.]+/g // e.g. '1:0 (18.) M.Toro'
 
   const events = eventsRaw.reduce((acc: string[], cur: string) => {
     const event = cur.match(regex)
@@ -124,28 +123,7 @@ const filterRequiredMatchesDataFieldsAndGroupMatchesByTournament =
   (matchesData: IMatchRaw[], tournamentNamesAndIDs: { [key: string]: string }) => {
     let tournaments: { [key: string]: IMatchProcessed[] } = {}
 
-    matchesData.forEach((match) => {
-      const { _tid, time, teams, result, comment } = match
-      const tournamentName = tournamentNamesAndIDs[_tid]
-      const events = parseCommentStringToEventsArray(comment)
-
-      const processedMatchData: IMatchProcessed = {
-        dateAndTime: `${time.date}: ${time.time}`,
-        teams: {
-          home: teams.home.name,
-          away: teams.away.name
-        },
-        score: {
-          home: result.home,
-          away: result.away
-        },
-        events: events,
-      }
-
-      if (!tournaments[tournamentName]) {
-        tournaments[tournamentName] = [processedMatchData]
-      } else tournaments[tournamentName].push(processedMatchData)
-    })
+    matchesData.forEach(populateTournaments(tournamentNamesAndIDs, tournaments))
     return tournaments
   }
 
@@ -163,3 +141,30 @@ export const getLastNMatchesGroupedByTournament = async (numberOfMatches: number
   const normalizedResult = filterRequiredMatchesDataFieldsAndGroupMatchesByTournament(lastNMatches, tournamentNamesAndIDs)
   return normalizedResult
 }
+const populateTournaments = (tournamentNamesAndIDs: { [key: string]: string }, tournaments: { [key: string]: IMatchProcessed[] }):
+  (value: IMatchRaw, index: number, array: IMatchRaw[]) => void => {
+  return (match): void => {
+    const { _tid, time, teams, result, comment } = match
+    const tournamentName = tournamentNamesAndIDs[_tid]
+    const events = parseCommentStringToEventsArray(comment || '')
+
+    const processedMatchData: IMatchProcessed = {
+      uts: time.uts,
+      teams: {
+        home: teams.home.name,
+        away: teams.away.name
+      },
+      score: {
+        home: result.home,
+        away: result.away
+      },
+      events: events,
+    }
+
+    if (!tournaments[tournamentName]) {
+      tournaments[tournamentName] = [processedMatchData]
+    } else
+      tournaments[tournamentName].push(processedMatchData)
+  }
+}
+
