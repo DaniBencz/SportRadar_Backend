@@ -1,35 +1,5 @@
 import fetch from 'node-fetch'
-import { Response } from 'node-fetch'
-interface IMatchRaw {
-  _id: number,
-  _tid: number,
-  time: {
-    time: string,
-    date: string,
-    uts: number
-  },
-  teams: {
-    home: { name: string },
-    away: { name: string }
-  },
-  result: {
-    home: number,
-    away: number
-  },
-  comment: string
-}
-interface IMatchProcessed {
-  uts: number,
-  teams: {
-    home: string,
-    away: string
-  }
-  score: {
-    home: number,
-    away: number
-  },
-  events: string[]
-}
+import { IMatchRaw, IMatchProcessed } from './serviceTypes';
 
 const getTournamentNamesAndIDs = async (uri: string): Promise<{ [key: string]: string }> => {
   const tournamentsResponse = await fetch(uri)
