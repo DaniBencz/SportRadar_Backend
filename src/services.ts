@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { IMatchRaw, IMatchProcessed } from './serviceTypes';
+import { IMatchRaw, IMatchProcessed, ITournament } from './serviceTypes';
 
 const getTournamentNamesAndIDs = async (uri: string): Promise<{ [key: string]: string }> => {
   const tournamentsResponse = await fetch(uri);
@@ -65,21 +65,23 @@ const getLastNMatches = (numberOfMatches: number, allMatches: IMatchRaw[]): IMat
 
 // the comment data-field gets verbose sometimes
 // here, this string is broken down to an array of 'widget-sized' pieces of info
-const parseCommentStringToEventsArray = (comment: string): string[] => {
-  const eventsRaw = comment.split(',').map((comment) => comment.trim());
+const parseCommentStringToEventsArray = (comment: string): {eid: number, event:string}[] => {
+  if (comment === '') return [];
+  const eventsRaw = comment.split(',').map((event) => event.trim());
   const regex = /\d:\d\s\(\d\d\.\)\s[a-zA-Z0-9.]+/g; // e.g. '1:0 (18.) M.Toro'
 
-  const events = eventsRaw.reduce((acc: string[], cur: string) => {
+  const events = eventsRaw.reduce((acc: {eid: number, event:string}[], cur: string, index: number) => {
     const event = cur.match(regex);
-    if (event?.length) return [...acc, event[0]];
+    if (event?.length) return [...acc, { eid: index, event: event[0] }];
     return acc;
   }, []);
   return events;
 };
 
 const filterRequiredMatchesDataFieldsAndGroupMatchesByTournament = (matchesData: IMatchRaw[], tournamentNamesAndIDs: { [key: string]: string }) => {
-  const tournaments: { [key: string]: IMatchProcessed[] } = {};
+  const tournaments: { [key: number]: ITournament } = {};
 
+  // ==== continue refactoring here =======
   matchesData.forEach(populateTournaments(tournamentNamesAndIDs, tournaments));
   return tournaments;
 };
@@ -93,6 +95,7 @@ const populateTournaments = (tournamentNamesAndIDs: { [key: string]: string }, t
   const events = parseCommentStringToEventsArray(comment || '');
 
   const processedMatchData: IMatchProcessed = {
+    mid: 0,
     uts: time.uts,
     teams: {
       home: teams.home.name,
