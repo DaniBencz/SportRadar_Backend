@@ -2,7 +2,7 @@ import express, { Response } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 
-import { foo } from './services';
+import foo from './services';
 
 const app = express();
 const port = process.env.PORT || 4040;
@@ -22,7 +22,7 @@ app.get('/results', async (_, res: Response) => {
     // const lastFiveMatchesGroupedByTournament = await getLastNMatchesGroupedByTournament(5);
     // res.json(lastFiveMatchesGroupedByTournament);
     const bar = await foo({});
-    console.log('bar: ', bar)
+    console.log('bar: ', bar);
     res.json(bar);
   } catch (e) {
     console.log(e); // eslint-disable-line no-console

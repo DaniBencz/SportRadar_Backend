@@ -1,8 +1,6 @@
 import fetch from 'node-fetch';
 import { IMatchRaw, IMatchProcessed, ITournament } from './serviceTypes';
 
-const pipe = (...fns:any[]) => (val:any) => fns.reduce((acc, cur) => cur(acc), val);
-
 const getTournaments = async () => {
   const uri = 'https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/config_tournaments/1/17';
   const tournamentsResponse = await fetch(uri);
@@ -10,8 +8,7 @@ const getTournaments = async () => {
   return tournamentsJson.doc[0].data;
 };
 
-// eslint-disable-next-line import/prefer-default-export
-export const getTournamentIDsAndNames = async (dataPromise: any): Promise<{ [key: number]: string; }> => {
+const getTournamentIDsAndNames = async (dataPromise: any): Promise<{ [key: number]: string; }> => {
   const data = await dataPromise;
   const {
     tournaments,
@@ -19,34 +16,35 @@ export const getTournamentIDsAndNames = async (dataPromise: any): Promise<{ [key
     cuptrees,
   } = data;
 
-  const tournamentNamesAndIDs = tournaments.reduce(
+  const tournamentIDsAndNames = tournaments.reduce(
     (acc: { _id: number, name: string; }, cur: { _id: number, name: string; }) => ({ ...acc, ...{ [cur._id]: cur.name } }), {},
   );
 
-  console.log(uniquetournaments);
-
   Object.keys(uniquetournaments).forEach((id: string) => {
-    if (!tournamentNamesAndIDs[id]) tournamentNamesAndIDs[id] = uniquetournaments[id].name;
+    if (!tournamentIDsAndNames[id]) tournamentIDsAndNames[id] = uniquetournaments[id].name;
   });
 
   Object.keys(cuptrees).forEach((id: string) => {
-    if (!tournamentNamesAndIDs[id]) tournamentNamesAndIDs[id] = cuptrees[id].name;
+    if (!tournamentIDsAndNames[id]) tournamentIDsAndNames[id] = cuptrees[id].name;
   });
 
-  console.log(tournamentNamesAndIDs);
-  return tournamentNamesAndIDs; // an object with tournament name as key, and tournament id as value
+  return tournamentIDsAndNames; // an object with tournament id as key, and tournament name as value
 };
 
-export const foo = pipe(getTournaments, getTournamentIDsAndNames);
+const getAllTournamentsData = async (data: Promise <{ [key: number]: string }>) => {
+  const tournamentIDsAndNames = await data;
+  const responseData = Object.keys(tournamentIDsAndNames).map((id) => {
+    const matchesUri = `https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/fixtures_tournament/${id}/2021`;
+    return fetch(matchesUri);
+  });
 
-// const getAllTournamentsData = async (tournamentNamesAndIDs: { [key: string]: string }) => {
-//   const responseData = Object.keys(tournamentNamesAndIDs).map((id: string) => {
-//     const matchesUri = `https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/fixtures_tournament/${id}/2021`;
-//     return fetch(matchesUri);
-//   });
+  return (await Promise.all(responseData)).map((response) => response.json());
+};
 
-//   return (await Promise.all(responseData)).map((response) => response.json());
-// };
+// figure out types
+const pipe = (...fns: any[]) => (val: any) => fns.reduce((acc, cur) => cur(acc), val);
+const foo = pipe(getTournaments, getTournamentIDsAndNames, getAllTournamentsData);
+export default foo;
 
 // const filterMatchesDataFromTournamentData = async (detailedTournamentData: Promise<any>[]):
 // Promise<{ [key: string]: IMatchRaw }[]> => (await Promise.all(detailedTournamentData)).reduce((acc, cur) => {
@@ -97,20 +95,20 @@ export const foo = pipe(getTournaments, getTournamentIDsAndNames);
 // };
 
 // const filterRequiredMatchesDataFieldsAndGroupMatchesByTournament =
-// (matchesData: IMatchRaw[], tournamentNamesAndIDs: { [key: string]: string }) => {
+// (matchesData: IMatchRaw[], tournamentIDsAndNames: { [key: string]: string }) => {
 //   const tournaments: { [key: number]: ITournament } = {};
 
 //   // ==== continue refactoring here =======
-//   matchesData.forEach(populateTournaments(tournamentNamesAndIDs, tournaments));
+//   matchesData.forEach(populateTournaments(tournamentIDsAndNames, tournaments));
 //   return tournaments;
 // };
 
-// const populateTournaments = (tournamentNamesAndIDs: { [key: string]: string }, tournaments: { [key: string]: IMatchProcessed[] }):
+// const populateTournaments = (tournamentIDsAndNames: { [key: string]: string }, tournaments: { [key: string]: IMatchProcessed[] }):
 //   (value: IMatchRaw, index: number, array: IMatchRaw[]) => void => (match): void => {
 //   const {
 //     _tid, time, teams, result, comment,
 //   } = match;
-//   const tournamentName = tournamentNamesAndIDs[_tid];
+//   const tournamentName = tournamentIDsAndNames[_tid];
 //   const events = parseCommentStringToEventsArray(comment || '');
 
 //   const processedMatchData: IMatchProcessed = {
@@ -133,16 +131,13 @@ export const foo = pipe(getTournaments, getTournamentIDsAndNames);
 // };
 
 // export const getLastNMatchesGroupedByTournament = async (numberOfMatches: number) => {
-//   const tournamentsAPI = 'https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/config_tournaments/1/17';
-//   const tournamentNamesAndIDs = await getTournamentNamesAndIDs(tournamentsAPI);
-
-//   const detailedTournamentsData = await getAllTournamentsData(tournamentNamesAndIDs);
+//   const detailedTournamentsData = await getAllTournamentsData(tournamentIDsAndNames);
 //   const matchesGroupedByTournament = await filterMatchesDataFromTournamentData(detailedTournamentsData);
 
 //   const allMatchesUnsorted = pushAllMatchesInOneSingleArray(matchesGroupedByTournament);
 //   const allMatchesSorted = sortAllMatchesByTimeDescending(allMatchesUnsorted);
 
 //   const lastNMatches = getLastNMatches(numberOfMatches, allMatchesSorted);
-//   const normalizedResult = filterRequiredMatchesDataFieldsAndGroupMatchesByTournament(lastNMatches, tournamentNamesAndIDs);
+//   const normalizedResult = filterRequiredMatchesDataFieldsAndGroupMatchesByTournament(lastNMatches, tournamentIDsAndNames);
 //   return normalizedResult;
 // };
