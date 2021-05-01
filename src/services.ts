@@ -31,17 +31,18 @@ const getTournamentIDsAndNames = async (dataPromise: any): Promise<{ [key: numbe
   return tournamentIDsAndNames; // an object with tournament id as key, and tournament name as value
 };
 
-const getAllTournamentsData = async (data: Promise <{ [key: number]: string }>) => {
+const getAllTournamentsData = async (data: Promise<{ [key: number]: string; }>) => {
   const tournamentIDsAndNames = await data;
   const responseData = Object.keys(tournamentIDsAndNames).map((id) => {
     const matchesUri = `https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/fixtures_tournament/${id}/2021`;
     return fetch(matchesUri);
   });
 
-  return (await Promise.all(responseData)).map((response) => response.json());
+  const foo = await Promise.all(responseData);
+  return Promise.all(foo.map((res) => res.json()));
 };
 
-// figure out types
+// https://stackoverflow.com/questions/65154695/typescript-types-for-a-pipe-function
 const pipe = (...fns: any[]) => (val: any) => fns.reduce((acc, cur) => cur(acc), val);
 const foo = pipe(getTournaments, getTournamentIDsAndNames, getAllTournamentsData);
 export default foo;
