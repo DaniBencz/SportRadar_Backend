@@ -2,7 +2,7 @@ import express, { Response } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 
-import { getLastNMatchesGroupedByTournament } from './services';
+import { foo } from './services';
 
 const app = express();
 const port = process.env.PORT || 4040;
@@ -19,8 +19,11 @@ app.get('/', (_, res: Response) => {
 
 app.get('/results', async (_, res: Response) => {
   try {
-    const lastFiveMatchesGroupedByTournament = await getLastNMatchesGroupedByTournament(5);
-    res.json(lastFiveMatchesGroupedByTournament);
+    // const lastFiveMatchesGroupedByTournament = await getLastNMatchesGroupedByTournament(5);
+    // res.json(lastFiveMatchesGroupedByTournament);
+    const bar = await foo({});
+    console.log('bar: ', bar)
+    res.json(bar);
   } catch (e) {
     console.log(e); // eslint-disable-line no-console
     res.status(500).json({ message: 'Server error, please try again later' });

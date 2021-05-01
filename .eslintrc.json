@@ -19,8 +19,8 @@
         "indent": ["error", 2],
         "import/extensions": "off",
         "max-len": ["error", {
-            "code": 120,
-            "comments": 150
+            "code": 130,
+            "comments": 200
         }]
     },
     "settings": {
