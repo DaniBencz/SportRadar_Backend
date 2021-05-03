@@ -42,28 +42,39 @@ const getAllTournamentsData = async (data: Promise<{ [key: number]: string; }>) 
   return Promise.all(foo.map((res) => res.json()));
 };
 
-// https://stackoverflow.com/questions/65154695/typescript-types-for-a-pipe-function
-const pipe = (...fns: any[]) => (val: any) => fns.reduce((acc, cur) => cur(acc), val);
-const foo = pipe(getTournaments, getTournamentIDsAndNames, getAllTournamentsData);
-export default foo;
+const filterMatchesDataFromTournamentData = async (detailedTournamentData: Promise<any[]>):
+  Promise<{ [key: number]: IMatchRaw; }[]> => (await detailedTournamentData).reduce((acc, cur) => {
+  if (cur?.doc[0]?.data?.matches) {
+    // if no match data is available from the tournament, it comes as empty array, else it is an object:
+    const isMatchesPropertyEmpty = cur?.doc[0]?.data?.matches instanceof Array;
 
-// const filterMatchesDataFromTournamentData = async (detailedTournamentData: Promise<any>[]):
-// Promise<{ [key: string]: IMatchRaw }[]> => (await Promise.all(detailedTournamentData)).reduce((acc, cur) => {
-//   if (cur?.doc[0]?.data?.matches) {
-//     // if no match data is available from the tournament, it comes as empty array, else it is an object:
-//     const isMatchesPropertyEmpty = cur?.doc[0]?.data?.matches instanceof Array;
-
-//     if (!isMatchesPropertyEmpty) return [...acc, cur?.doc[0]?.data?.matches];
-//     return acc;
-//   } return acc;
-// }, []);
+    if (!isMatchesPropertyEmpty) return [...acc, cur?.doc[0]?.data?.matches];
+    return acc;
+  } return acc;
+}, []);
 
 // // matches are originally listed in an object, where match-id is the key, and match-data is value
 // // here, this object is converted into an array, containing the match-datas as elements
-// export const convertMatchesObjectToArray = (matches: { [key: string]: IMatchRaw }) => Object.keys(matches).map((key) => matches[key]);
+export const convertMatchesObjectToArray = (matches: { [key: number]: IMatchRaw; }) =>
+  // eslint-disable-next-line implicit-arrow-linebreak
+  Object.keys(matches).map((key:any) => matches[key]);
 
-// const pushAllMatchesInOneSingleArray = (matchesGroupedByTournament: { [key: string]: IMatchRaw }[])
-// => matchesGroupedByTournament.reduce((acc: IMatchRaw[], cur: { [key: string]: IMatchRaw }) => [...acc, ...convertMatchesObjectToArray(cur)], []);
+const pushAllMatchesInOneSingleArray = async (matchesGroupedByTournament: Promise<{ [key: number]: IMatchRaw }[]>) =>
+  // eslint-disable-next-line implicit-arrow-linebreak
+  (await matchesGroupedByTournament).reduce((acc: IMatchRaw[], cur: { [key: number]: IMatchRaw }) =>
+    // eslint-disable-next-line implicit-arrow-linebreak
+    [...acc, ...convertMatchesObjectToArray(cur)], []);
+
+// https://stackoverflow.com/questions/65154695/typescript-types-for-a-pipe-function
+const pipe = (...fns: any[]) => (val: any) => fns.reduce((acc, cur) => cur(acc), val);
+const foo = pipe(
+  getTournaments,
+  getTournamentIDsAndNames,
+  getAllTournamentsData,
+  filterMatchesDataFromTournamentData,
+  pushAllMatchesInOneSingleArray,
+);
+export default foo;
 
 // export const sortAllMatchesByTimeDescending = (unsortedMatches: IMatchRaw[]) => [...unsortedMatches].sort((a, b) => b.time.uts - a.time.uts);
 
