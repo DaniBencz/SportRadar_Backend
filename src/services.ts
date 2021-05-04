@@ -44,26 +44,42 @@ const getAllTournamentsData = async (data: Promise<{ [key: number]: string; }>) 
 
 const filterMatchesDataFromTournamentData = async (detailedTournamentData: Promise<any[]>):
   Promise<{ [key: number]: IMatchRaw; }[]> => (await detailedTournamentData).reduce((acc, cur) => {
-  if (cur?.doc[0]?.data?.matches) {
-    // if no match data is available from the tournament, it comes as empty array, else it is an object:
-    const isMatchesPropertyEmpty = cur?.doc[0]?.data?.matches instanceof Array;
+    if (cur?.doc[0]?.data?.matches) {
+      // if no match data is available from the tournament, it comes as empty array, else it is an object:
+      const isMatchesPropertyEmpty = cur?.doc[0]?.data?.matches instanceof Array;
 
-    if (!isMatchesPropertyEmpty) return [...acc, cur?.doc[0]?.data?.matches];
-    return acc;
-  } return acc;
+      if (!isMatchesPropertyEmpty) return [...acc, cur?.doc[0]?.data?.matches];
+      return acc;
+    } return acc;
 }, []);
 
-// // matches are originally listed in an object, where match-id is the key, and match-data is value
-// // here, this object is converted into an array, containing the match-datas as elements
+// matches are originally listed in an object, where match-id is the key, and match-data is value
+// here, this object is converted into an array, containing the match-datas as elements
 export const convertMatchesObjectToArray = (matches: { [key: number]: IMatchRaw; }) =>
-  // eslint-disable-next-line implicit-arrow-linebreak
-  Object.keys(matches).map((key:any) => matches[key]);
+  Object.keys(matches).map((key: any) => matches[key]);
 
-const pushAllMatchesInOneSingleArray = async (matchesGroupedByTournament: Promise<{ [key: number]: IMatchRaw }[]>) =>
-  // eslint-disable-next-line implicit-arrow-linebreak
-  (await matchesGroupedByTournament).reduce((acc: IMatchRaw[], cur: { [key: number]: IMatchRaw }) =>
-    // eslint-disable-next-line implicit-arrow-linebreak
+const pushAllMatchesInOneSingleArray = async (matchesGroupedByTournament: Promise<{ [key: number]: IMatchRaw; }[]>) =>
+  (await matchesGroupedByTournament).reduce((acc: IMatchRaw[], cur: { [key: number]: IMatchRaw; }) =>
     [...acc, ...convertMatchesObjectToArray(cur)], []);
+
+export const sortAllMatchesByTimeDescending = async (unsortedMatches: Promise<IMatchRaw[]>) => {
+  const matches = await unsortedMatches;
+  return matches.sort((a, b) => b.time.uts - a.time.uts);
+};
+
+const getLastNMatches = async (allMatches: IMatchRaw[]): Promise<IMatchRaw[]> => {
+  const matches = await allMatches;
+  const results: IMatchRaw[] = [];
+  const now = Math.round(new Date().getTime() / 1000);
+
+  // looping backwards in time from future matches data to present, and past
+  // saving the 5 recent-most matches to a new array, and exit
+  for (let i = 0; i <= matches.length; i++) {
+    if (matches[i].time.uts <= now) results.push(matches[i]);
+    if (results.length >= 5) break;
+  }
+  return results;
+};
 
 // https://stackoverflow.com/questions/65154695/typescript-types-for-a-pipe-function
 const pipe = (...fns: any[]) => (val: any) => fns.reduce((acc, cur) => cur(acc), val);
@@ -73,23 +89,10 @@ const foo = pipe(
   getAllTournamentsData,
   filterMatchesDataFromTournamentData,
   pushAllMatchesInOneSingleArray,
+  sortAllMatchesByTimeDescending,
+  getLastNMatches,
 );
 export default foo;
-
-// export const sortAllMatchesByTimeDescending = (unsortedMatches: IMatchRaw[]) => [...unsortedMatches].sort((a, b) => b.time.uts - a.time.uts);
-
-// const getLastNMatches = (numberOfMatches: number, allMatches: IMatchRaw[]): IMatchRaw[] => {
-//   const results: IMatchRaw[] = [];
-//   const now = Math.round(new Date().getTime() / 1000);
-
-//   // looping backwards in time from future matches data to present, and past
-//   // saving the N recent-most matches to a new array, and exit
-//   for (let i = 0; i <= allMatches.length; i++) {
-//     if (allMatches[i].time.uts <= now) results.push(allMatches[i]);
-//     if (results.length >= numberOfMatches) break;
-//   }
-//   return results;
-// };
 
 // // the comment data-field gets verbose sometimes
 // // here, this string is broken down to an array of 'widget-sized' pieces of info
