@@ -20,13 +20,17 @@ const getTournamentIDsAndNames = async (dataPromise: any): Promise<{ [key: numbe
     (acc: { _id: number, name: string; }, cur: { _id: number, name: string; }) => ({ ...acc, ...{ [cur._id]: cur.name } }), {},
   );
 
-  Object.keys(uniquetournaments).forEach((id: string) => {
-    if (!tournamentIDsAndNames[id]) tournamentIDsAndNames[id] = uniquetournaments[id].name;
-  });
+  if (uniquetournaments) {
+    Object.keys(uniquetournaments).forEach((id: string) => {
+      if (!tournamentIDsAndNames[id]) tournamentIDsAndNames[id] = uniquetournaments[id].name;
+    });
+  }
 
-  Object.keys(cuptrees).forEach((id: string) => {
-    if (!tournamentIDsAndNames[id]) tournamentIDsAndNames[id] = cuptrees[id].name;
-  });
+  if (cuptrees) {
+    Object.keys(cuptrees).forEach((id: string) => {
+      if (!tournamentIDsAndNames[id]) tournamentIDsAndNames[id] = cuptrees[id].name;
+    });
+  }
 
   return tournamentIDsAndNames; // an object with tournament id as key, and tournament name as value
 };
@@ -44,13 +48,13 @@ const getAllTournamentsData = async (data: Promise<{ [key: number]: string; }>) 
 
 const filterMatchesDataFromTournamentData = async (detailedTournamentData: Promise<any[]>):
   Promise<{ [key: number]: IMatchRaw; }[]> => (await detailedTournamentData).reduce((acc, cur) => {
-    if (cur?.doc[0]?.data?.matches) {
-      // if no match data is available from the tournament, it comes as empty array, else it is an object:
-      const isMatchesPropertyEmpty = cur?.doc[0]?.data?.matches instanceof Array;
+  if (cur?.doc[0]?.data?.matches) {
+    // if no match data is available from the tournament, it comes as empty array, else it is an object:
+    const isMatchesPropertyEmpty = cur?.doc[0]?.data?.matches instanceof Array;
 
-      if (!isMatchesPropertyEmpty) return [...acc, cur?.doc[0]?.data?.matches];
-      return acc;
-    } return acc;
+    if (!isMatchesPropertyEmpty) return [...acc, cur?.doc[0]?.data?.matches];
+    return acc;
+  } return acc;
 }, []);
 
 // matches are originally listed in an object, where match-id is the key, and match-data is value
@@ -81,19 +85,6 @@ const getLastNMatches = async (allMatches: IMatchRaw[]): Promise<IMatchRaw[]> =>
   return results;
 };
 
-// https://stackoverflow.com/questions/65154695/typescript-types-for-a-pipe-function
-const pipe = (...fns: any[]) => (val: any) => fns.reduce((acc, cur) => cur(acc), val);
-const foo = pipe(
-  getTournaments,
-  getTournamentIDsAndNames,
-  getAllTournamentsData,
-  filterMatchesDataFromTournamentData,
-  pushAllMatchesInOneSingleArray,
-  sortAllMatchesByTimeDescending,
-  getLastNMatches,
-);
-export default foo;
-
 // // the comment data-field gets verbose sometimes
 // // here, this string is broken down to an array of 'widget-sized' pieces of info
 // const parseCommentStringToEventsArray = (comment: string): {eid: number, event:string}[] => {
@@ -107,15 +98,6 @@ export default foo;
 //     return acc;
 //   }, []);
 //   return events;
-// };
-
-// const filterRequiredMatchesDataFieldsAndGroupMatchesByTournament =
-// (matchesData: IMatchRaw[], tournamentIDsAndNames: { [key: string]: string }) => {
-//   const tournaments: { [key: number]: ITournament } = {};
-
-//   // ==== continue refactoring here =======
-//   matchesData.forEach(populateTournaments(tournamentIDsAndNames, tournaments));
-//   return tournaments;
 // };
 
 // const populateTournaments = (tournamentIDsAndNames: { [key: string]: string }, tournaments: { [key: string]: IMatchProcessed[] }):
@@ -144,6 +126,29 @@ export default foo;
 //     tournaments[tournamentName] = [processedMatchData];
 //   } else tournaments[tournamentName].push(processedMatchData);
 // };
+
+// const filterRequiredMatchesDataFieldsAndGroupMatchesByTournament =
+// (matchesData: IMatchRaw[], tournamentIDsAndNames: { [key: string]: string }) => {
+//   const tournaments: { [key: number]: ITournament } = {};
+
+//   // ==== continue refactoring here =======
+//   matchesData.forEach(populateTournaments(tournamentIDsAndNames, tournaments));
+//   return tournaments;
+// };
+
+// https://stackoverflow.com/questions/65154695/typescript-types-for-a-pipe-function
+const pipe = (...fns: any[]) => (val: any = []) => fns.reduce((acc, cur) => cur(acc), val);
+const getLastFiveMatchesGroupedByTournament = pipe(
+  getTournaments,
+  getTournamentIDsAndNames,
+  getAllTournamentsData,
+  filterMatchesDataFromTournamentData,
+  pushAllMatchesInOneSingleArray,
+  sortAllMatchesByTimeDescending,
+  getLastNMatches,
+  // filterRequiredMatchesDataFieldsAndGroupMatchesByTournament
+);
+export default getLastFiveMatchesGroupedByTournament;
 
 // export const getLastNMatchesGroupedByTournament = async (numberOfMatches: number) => {
 //   const detailedTournamentsData = await getAllTournamentsData(tournamentIDsAndNames);
