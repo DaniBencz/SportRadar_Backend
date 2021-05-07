@@ -1,6 +1,7 @@
 export interface IMatchRaw {
   _id: number,
   _tid: number,
+  tName: string,
   time: {
     time: string,
     date: string,

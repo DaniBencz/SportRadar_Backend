@@ -16,19 +16,19 @@ const getTournamentIDsAndNames = async (dataPromise: any): Promise<{ [key: numbe
     cuptrees,
   } = data;
 
-  const tournamentIDsAndNames = tournaments.reduce(
+  const tournamentIDsAndNames: { [key: number]: string; } = tournaments.reduce(
     (acc: { _id: number, name: string; }, cur: { _id: number, name: string; }) => ({ ...acc, ...{ [cur._id]: cur.name } }), {},
   );
 
   if (uniquetournaments) {
     Object.keys(uniquetournaments).forEach((id: string) => {
-      if (!tournamentIDsAndNames[id]) tournamentIDsAndNames[id] = uniquetournaments[id].name;
+      if (!tournamentIDsAndNames[Number(id)]) tournamentIDsAndNames[Number(id)] = uniquetournaments[id].name;
     });
   }
 
   if (cuptrees) {
     Object.keys(cuptrees).forEach((id: string) => {
-      if (!tournamentIDsAndNames[id]) tournamentIDsAndNames[id] = cuptrees[id].name;
+      if (!tournamentIDsAndNames[Number(id)]) tournamentIDsAndNames[Number(id)] = cuptrees[id].name;
     });
   }
 
@@ -37,22 +37,31 @@ const getTournamentIDsAndNames = async (dataPromise: any): Promise<{ [key: numbe
 
 const getAllTournamentsData = async (data: Promise<{ [key: number]: string; }>) => {
   const tournamentIDsAndNames = await data;
-  const responseData = Object.keys(tournamentIDsAndNames).map((id) => {
+  const responseData = Object.keys(tournamentIDsAndNames).map(async (id) => {
     const matchesUri = `https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/fixtures_tournament/${id}/2021`;
-    return fetch(matchesUri);
+
+    // below wuold be better solved with some kind of Promise.all
+    return { tName: tournamentIDsAndNames[Number(id)], data: await (await fetch(matchesUri)).json() };
   });
 
-  const foo = await Promise.all(responseData);
-  return Promise.all(foo.map((res) => res.json()));
+  return Promise.all(responseData);
 };
 
 const filterMatchesDataFromTournamentData = async (detailedTournamentData: Promise<any[]>):
   Promise<{ [key: number]: IMatchRaw; }[]> => (await detailedTournamentData).reduce((acc, cur) => {
-  if (cur?.doc[0]?.data?.matches) {
+  const matches = cur.data?.doc[0]?.data?.matches;
+  if (matches) {
     // if no match data is available from the tournament, it comes as empty array, else it is an object:
-    const isMatchesPropertyEmpty = cur?.doc[0]?.data?.matches instanceof Array;
+    const isMatchesPropertyEmpty = matches instanceof Array;
 
-    if (!isMatchesPropertyEmpty) return [...acc, cur?.doc[0]?.data?.matches];
+    if (!isMatchesPropertyEmpty) {
+      const newMatches = Object.keys(matches).map((id) => {
+        const foo = { ...matches[id] };
+        foo.tName = cur.tName;
+        return foo;
+      });
+      return [...acc, newMatches];
+    }
     return acc;
   } return acc;
 }, []);
