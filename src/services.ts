@@ -1,5 +1,8 @@
+/* eslint-disable no-underscore-dangle */
 import fetch from 'node-fetch';
-import { IMatchRaw, IMatchProcessed, ITournament } from './serviceTypes';
+import {
+  IMatchRaw, IMatchProcessed, ITournament, ITournaments,
+} from './serviceTypes';
 
 const getTournaments = async () => {
   const uri = 'https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/config_tournaments/1/17';
@@ -89,56 +92,54 @@ const getLastNMatches = async (allMatches: IMatchRaw[]): Promise<IMatchRaw[]> =>
   return results;
 };
 
-// // the comment data-field gets verbose sometimes
-// // here, this string is broken down to an array of 'widget-sized' pieces of info
-// const parseCommentStringToEventsArray = (comment: string): {eid: number, event:string}[] => {
-//   if (comment === '') return [];
-//   const eventsRaw = comment.split(',').map((event) => event.trim());
-//   const regex = /\d:\d\s\(\d\d\.\)\s[a-zA-Z0-9.]+/g; // e.g. '1:0 (18.) M.Toro'
+// the comment data-field gets verbose sometimes
+// here, this string is broken down to an array of 'widget-sized' pieces of info
+const parseCommentStringToEventsArray = (comment: string): {eid: number, event:string}[] => {
+  if (comment === '') return [];
+  const eventsRaw = comment.split(',').map((event) => event.trim());
+  const regex = /\d:\d\s\(\d\d\.\)\s[a-zA-Z0-9.]+/g; // e.g. '1:0 (18.) M.Toro'
 
-//   const events = eventsRaw.reduce((acc: {eid: number, event:string}[], cur: string, index: number) => {
-//     const event = cur.match(regex);
-//     if (event?.length) return [...acc, { eid: index, event: event[0] }];
-//     return acc;
-//   }, []);
-//   return events;
-// };
+  const events = eventsRaw.reduce((acc: {eid: number, event:string}[], cur: string, index: number) => {
+    const event = cur.match(regex);
+    if (event?.length) return [...acc, { eid: index, event: event[0] }];
+    return acc;
+  }, []);
+  return events;
+};
 
-// const populateTournaments = (tournamentIDsAndNames: { [key: string]: string }, tournaments: { [key: string]: IMatchProcessed[] }):
-//   (value: IMatchRaw, index: number, array: IMatchRaw[]) => void => (match): void => {
-//   const {
-//     _tid, time, teams, result, comment,
-//   } = match;
-//   const tournamentName = tournamentIDsAndNames[_tid];
-//   const events = parseCommentStringToEventsArray(comment || '');
+const filterRequiredMatchesDataFieldsAndGroupMatchesByTournament = async (data: Promise<IMatchRaw[]>) => {
+  const matchesData = await data;
+  const tournaments: ITournaments = {};
 
-//   const processedMatchData: IMatchProcessed = {
-//     mid: 0,
-//     uts: time.uts,
-//     teams: {
-//       home: teams.home.name,
-//       away: teams.away.name,
-//     },
-//     score: {
-//       home: result.home,
-//       away: result.away,
-//     },
-//     events,
-//   };
+  matchesData.forEach((match) => {
+    const {
+      _id, _tid, time, teams, result, comment, tName,
+    } = match;
+    const events = parseCommentStringToEventsArray(comment || '');
 
-//   if (!tournaments[tournamentName]) {
-//     tournaments[tournamentName] = [processedMatchData];
-//   } else tournaments[tournamentName].push(processedMatchData);
-// };
+    const processedMatchData: IMatchProcessed = {
+      mid: _id,
+      uts: time.uts,
+      teams: {
+        home: teams.home.name,
+        away: teams.away.name,
+      },
+      score: {
+        home: result.home,
+        away: result.away,
+      },
+      events,
+    };
 
-// const filterRequiredMatchesDataFieldsAndGroupMatchesByTournament =
-// (matchesData: IMatchRaw[], tournamentIDsAndNames: { [key: string]: string }) => {
-//   const tournaments: { [key: number]: ITournament } = {};
-
-//   // ==== continue refactoring here =======
-//   matchesData.forEach(populateTournaments(tournamentIDsAndNames, tournaments));
-//   return tournaments;
-// };
+    if (!tournaments[_tid]) {
+      tournaments[_tid] = {
+        name: tName,
+        matches: [processedMatchData],
+      };
+    } else tournaments[_tid].matches.push(processedMatchData);
+  });
+  return tournaments;
+};
 
 const logger = async <T>(promise: T) => {
   const data = await promise;
@@ -156,19 +157,7 @@ const getLastFiveMatchesGroupedByTournament = pipe(
   pushAllMatchesInOneSingleArray,
   sortAllMatchesByTimeDescending,
   getLastNMatches,
+  filterRequiredMatchesDataFieldsAndGroupMatchesByTournament,
   logger,
-  // filterRequiredMatchesDataFieldsAndGroupMatchesByTournament
 );
 export default getLastFiveMatchesGroupedByTournament;
-
-// export const getLastNMatchesGroupedByTournament = async (numberOfMatches: number) => {
-//   const detailedTournamentsData = await getAllTournamentsData(tournamentIDsAndNames);
-//   const matchesGroupedByTournament = await filterMatchesDataFromTournamentData(detailedTournamentsData);
-
-//   const allMatchesUnsorted = pushAllMatchesInOneSingleArray(matchesGroupedByTournament);
-//   const allMatchesSorted = sortAllMatchesByTimeDescending(allMatchesUnsorted);
-
-//   const lastNMatches = getLastNMatches(numberOfMatches, allMatchesSorted);
-//   const normalizedResult = filterRequiredMatchesDataFieldsAndGroupMatchesByTournament(lastNMatches, tournamentIDsAndNames);
-//   return normalizedResult;
-// };

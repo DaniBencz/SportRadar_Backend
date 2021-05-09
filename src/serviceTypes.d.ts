@@ -36,3 +36,7 @@ export interface ITournament {
   name: string,
   matches: IMatchProcessed[];
 }
+
+export interface ITournaments {
+  [tid: number]: ITournament;
+}
