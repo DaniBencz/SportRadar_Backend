@@ -66,14 +66,9 @@ const filterMatchesDataFromTournamentData = async (detailedTournamentData: Promi
   } return acc;
 }, []);
 
-// matches are originally listed in an object, where match-id is the key, and match-data is value
-// here, this object is converted into an array, containing the match-datas as elements
-export const convertMatchesObjectToArray = (matches: { [key: number]: IMatchRaw; }) =>
-  Object.keys(matches).map((key: any) => matches[key]);
-
-const pushAllMatchesInOneSingleArray = async (matchesGroupedByTournament: Promise<{ [key: number]: IMatchRaw; }[]>) =>
-  (await matchesGroupedByTournament).reduce((acc: IMatchRaw[], cur: { [key: number]: IMatchRaw; }) =>
-    [...acc, ...convertMatchesObjectToArray(cur)], []);
+const pushAllMatchesInOneSingleArray = async (matchesGroupedByTournament: Promise<IMatchRaw[][]>) =>
+  (await matchesGroupedByTournament).reduce((acc: IMatchRaw[], cur: IMatchRaw[]) =>
+    [...acc, ...cur], []);
 
 export const sortAllMatchesByTimeDescending = async (unsortedMatches: Promise<IMatchRaw[]>) => {
   const matches = await unsortedMatches;
@@ -145,6 +140,12 @@ const getLastNMatches = async (allMatches: IMatchRaw[]): Promise<IMatchRaw[]> =>
 //   return tournaments;
 // };
 
+const logger = async <T>(promise: T) => {
+  const data = await promise;
+  console.log('logger: ', JSON.stringify(data, null, 2));
+  return data;
+};
+
 // https://stackoverflow.com/questions/65154695/typescript-types-for-a-pipe-function
 const pipe = (...fns: any[]) => (val: any = []) => fns.reduce((acc, cur) => cur(acc), val);
 const getLastFiveMatchesGroupedByTournament = pipe(
@@ -155,6 +156,7 @@ const getLastFiveMatchesGroupedByTournament = pipe(
   pushAllMatchesInOneSingleArray,
   sortAllMatchesByTimeDescending,
   getLastNMatches,
+  logger,
   // filterRequiredMatchesDataFieldsAndGroupMatchesByTournament
 );
 export default getLastFiveMatchesGroupedByTournament;

@@ -19,12 +19,9 @@ app.get('/', (_, res: Response) => {
 
 app.get('/results', async (_, res: Response) => {
   try {
-    const bar = await getLastFiveMatchesGroupedByTournament();
-    console.log('bar: ', bar);
-
     res.json(await getLastFiveMatchesGroupedByTournament());
   } catch (e) {
-    console.log(e); // eslint-disable-line no-console
+    console.error(e); // eslint-disable-line no-console
     res.status(500).json({ message: 'Server error, please try again later' });
   }
 });
