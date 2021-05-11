@@ -43,35 +43,39 @@ const getAllTournamentsData = async (data: Promise<{ [key: number]: string; }>) 
   const responseData = Object.keys(tournamentIDsAndNames).map(async (id) => {
     const matchesUri = `https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/fixtures_tournament/${id}/2021`;
 
-    // below wuold be better solved with some kind of Promise.all
+    // below would be better solved with some kind of Promise.all
     return { tName: tournamentIDsAndNames[Number(id)], data: await (await fetch(matchesUri)).json() };
   });
 
   return Promise.all(responseData);
 };
 
-const filterMatchesDataFromTournamentData = async (detailedTournamentData: Promise<any[]>):
-  Promise<{ [key: number]: IMatchRaw; }[]> => (await detailedTournamentData).reduce((acc, cur) => {
-  const matches = cur.data?.doc[0]?.data?.matches;
-  if (matches) {
-    // if no match data is available from the tournament, it comes as empty array, else it is an object:
-    const isMatchesPropertyEmpty = matches instanceof Array;
+const filterMatchesDataFromTournamentData = async (data: Promise<any[]>): Promise<{ [key: number]: IMatchRaw; }[]> => {
+  const detailedTournamentData = await data;
+  return detailedTournamentData.reduce((acc, cur) => {
+    const matches = cur.data?.doc[0]?.data?.matches;
+    if (matches) {
+      // if no match data is available from the tournament, it comes as empty array, else it is an object:
+      const isMatchesPropertyEmpty = matches instanceof Array;
 
-    if (!isMatchesPropertyEmpty) {
-      const newMatches = Object.keys(matches).map((id) => {
-        const foo = { ...matches[id] };
-        foo.tName = cur.tName;
-        return foo;
-      });
-      return [...acc, newMatches];
-    }
-    return acc;
-  } return acc;
-}, []);
+      if (!isMatchesPropertyEmpty) {
+        const newMatches = Object.keys(matches).map((id) => {
+          const foo = { ...matches[id] };
+          foo.tName = cur.tName;
+          return foo;
+        });
+        return [...acc, newMatches];
+      }
+      return acc;
+    } return acc;
+  }, []);
+};
 
-const pushAllMatchesInOneSingleArray = async (matchesGroupedByTournament: Promise<IMatchRaw[][]>) =>
-  (await matchesGroupedByTournament).reduce((acc: IMatchRaw[], cur: IMatchRaw[]) =>
+const pushAllMatchesInOneSingleArray = async (data: Promise<IMatchRaw[][]>) => {
+  const matchesGroupedByTournament = await data;
+  return matchesGroupedByTournament.reduce((acc: IMatchRaw[], cur: IMatchRaw[]) =>
     [...acc, ...cur], []);
+};
 
 export const sortAllMatchesByTimeDescending = async (unsortedMatches: Promise<IMatchRaw[]>) => {
   const matches = await unsortedMatches;
@@ -85,7 +89,7 @@ const getLastNMatches = async (allMatches: IMatchRaw[]): Promise<IMatchRaw[]> =>
 
   // looping backwards in time from future matches data to present, and past
   // saving the 5 recent-most matches to a new array, and exit
-  for (let i = 0; i <= matches.length; i++) {
+  for (let i = 0; i <= matches.length; i++) { // eslint-disable-line no-plusplus
     if (matches[i].time.uts <= now) results.push(matches[i]);
     if (results.length >= 5) break;
   }
@@ -94,12 +98,12 @@ const getLastNMatches = async (allMatches: IMatchRaw[]): Promise<IMatchRaw[]> =>
 
 // the comment data-field gets verbose sometimes
 // here, this string is broken down to an array of 'widget-sized' pieces of info
-const parseCommentStringToEventsArray = (comment: string): {eid: number, event:string}[] => {
+const parseCommentStringToEventsArray = (comment: string): { eid: number, event: string; }[] => {
   if (comment === '') return [];
   const eventsRaw = comment.split(',').map((event) => event.trim());
   const regex = /\d:\d\s\(\d\d\.\)\s[a-zA-Z0-9.]+/g; // e.g. '1:0 (18.) M.Toro'
 
-  const events = eventsRaw.reduce((acc: {eid: number, event:string}[], cur: string, index: number) => {
+  const events = eventsRaw.reduce((acc: { eid: number, event: string; }[], cur: string, index: number) => {
     const event = cur.match(regex);
     if (event?.length) return [...acc, { eid: index, event: event[0] }];
     return acc;

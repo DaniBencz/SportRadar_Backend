@@ -1,9 +1,8 @@
 import {
-  sortAllMatchesByTimeDescending,
+  convertMatchesObjectToArray, sortAllMatchesByTimeDescending,
 } from './services';
 
 describe('testing services', () => {
-  // eslint-disable-next-line no-unused-vars
   const dummyMatchesObj = {
     match1: {
       _id: 1,
@@ -84,6 +83,10 @@ describe('testing services', () => {
       comment: '',
     },
   ];
+
+  it('converts Matches object values into Matches array', () => {
+    expect(convertMatchesObjectToArray(dummyMatchesObj)).toStrictEqual(dummyMatchesArrUnsorted);
+  });
 
   it('sorts Matches array by uts time descending', () => {
     expect(sortAllMatchesByTimeDescending(dummyMatchesArrUnsorted)).toStrictEqual(dummyMatchesArrSorted);
