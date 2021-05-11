@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 import fetch from 'node-fetch';
 import {
-  IMatchRaw, IMatchProcessed, ITournament, ITournaments,
+  IMatchRaw, IMatchProcessed, ITournaments,
 } from './serviceTypes';
 
 const getTournaments = async () => {
@@ -143,6 +143,7 @@ const filterRequiredMatchesDataFieldsAndGroupMatchesByTournament = async (data: 
 
 const logger = async <T>(promise: T) => {
   const data = await promise;
+  // eslint-disable-next-line no-console
   console.log('logger: ', JSON.stringify(data, null, 2));
   return data;
 };
