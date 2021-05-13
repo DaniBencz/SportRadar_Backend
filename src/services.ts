@@ -4,7 +4,7 @@ import {
   IMatchRaw, IMatchProcessed, ITournaments,
 } from './serviceTypes';
 
-const getTournaments = async (): Promise<any> => {
+const getTournaments = async (): Promise<unknown> => {
   const uri = 'https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/config_tournaments/1/17';
   const tournamentsResponse = await fetch(uri);
   const tournamentsJson = await tournamentsResponse.json();
@@ -143,8 +143,10 @@ const logger = async <T>(data: T) => {
   return data;
 };
 
+// eslint-disable-next-line no-unused-vars
+type fn = (input: any) => Promise<unknown>;
 // https://stackoverflow.com/questions/65154695/typescript-types-for-a-pipe-function
-const pipe = (...fns: any[]) => (val: any = []) => fns.reduce(async (acc, cur) => cur(await acc), val);
+const pipe = (...fns: fn[]) => (val: any = {}) => fns.reduce(async (acc, cur) => cur(await acc), val);
 
 const getLastFiveMatchesGroupedByTournament = pipe(
   getTournaments,
