@@ -22,7 +22,8 @@
             "code": 130,
             "comments": 200
         }],
-        "implicit-arrow-linebreak": "off"
+        "implicit-arrow-linebreak": "off",
+        "no-underscore-dangle": "off"
     },
     "settings": {
         "import/extensions": [".ts"],
