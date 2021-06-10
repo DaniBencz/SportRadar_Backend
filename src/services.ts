@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle */
 import fetch from 'node-fetch';
 import {
   IMatchRaw, IMatchProcessed, ITournaments,
@@ -104,7 +103,7 @@ const parseCommentStringToEventsArray = (comment: string): { eid: number, event:
   return events;
 };
 
-const filterRequiredMatchesDataFieldsAndGroupMatchesByTournament = async (data: IMatchRaw[]) => {
+const groupMatchesByTournament = async (data: IMatchRaw[]) => {
   const tournaments: ITournaments = {};
 
   data.forEach((match) => {
@@ -134,6 +133,7 @@ const filterRequiredMatchesDataFieldsAndGroupMatchesByTournament = async (data: 
       };
     } else tournaments[_tid].matches.push(processedMatchData);
   });
+
   return tournaments;
 };
 
@@ -145,7 +145,6 @@ const logger = async <T>(data: T) => {
 
 // eslint-disable-next-line no-unused-vars
 type fn = (input: any) => Promise<unknown>;
-// https://stackoverflow.com/questions/65154695/typescript-types-for-a-pipe-function
 const pipe = (...fns: fn[]) => (val: any = {}) => fns.reduce(async (acc, cur) => cur(await acc), val);
 
 const getLastFiveMatchesGroupedByTournament = pipe(
@@ -156,7 +155,8 @@ const getLastFiveMatchesGroupedByTournament = pipe(
   pushAllMatchesInOneSingleArray,
   sortAllMatchesByTimeDescending,
   getLastNMatches,
-  filterRequiredMatchesDataFieldsAndGroupMatchesByTournament,
+  groupMatchesByTournament,
   logger,
 );
+
 export default getLastFiveMatchesGroupedByTournament;
