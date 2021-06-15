@@ -1,0 +1,18 @@
+FROM node:14-alpine
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+# RUN npm ci --only=production
+# RUN npm install
+# RUN npm ci --only=production --unsafe-perm
+RUN npm ci --unsafe-perm
+# RUN npm ci --ignore-scripts
+# RUN npm run build
+
+COPY ./compiled .
+COPY ./public ./public
+
+# EXPOSE 4040
+CMD [ "node", "index.js" ]
