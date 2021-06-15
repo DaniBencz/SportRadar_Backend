@@ -8,11 +8,14 @@ COPY package*.json ./
 # RUN npm install
 # RUN npm ci --only=production --unsafe-perm
 RUN npm ci --unsafe-perm
+# if using ci, mind the postinstall script
 # RUN npm ci --ignore-scripts
-# RUN npm run build
+COPY . .
+
+RUN npm run build
 
 COPY ./compiled .
 COPY ./public ./public
 
 # EXPOSE 4040
-CMD [ "node", "index.js" ]
+CMD [ "node", "compiled/index.js" ]

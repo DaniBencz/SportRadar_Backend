@@ -4,10 +4,15 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm ci --only=production
+RUN npm install
+# if using ci, mind the postinstall script
 
-COPY ./compiled .
-COPY ./public ./public
+COPY . .
+
+RUN npm run build
+
+# COPY ./compiled .
+# COPY ./public ./public
 
 EXPOSE 4040
-CMD [ "node", "index.js" ]
+CMD [ "node", "compiled/index.js" ]
