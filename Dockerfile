@@ -4,8 +4,9 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install
 # if using ci, mind the postinstall script
+# RUN npm ci --unsafe-perm
+RUN npm install
 
 COPY . .
 
@@ -13,8 +14,6 @@ RUN npm run build
 
 RUN rm -r src
 
-# COPY ./compiled .
-# COPY ./public ./public
-
-EXPOSE 4040
 CMD [ "node", "compiled/index.js" ]
+# for local container
+# docker run --rm --env PORT=4000 -p 5000:4000 <image>
