@@ -5,17 +5,23 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # RUN npm ci --only=production
-# RUN npm install
+RUN npm install
 # RUN npm ci --only=production --unsafe-perm
-RUN npm ci --unsafe-perm
-# if using ci, mind the postinstall script
 # RUN npm ci --ignore-scripts
+
+# RUN npm ci --unsafe-perm
+# if using ci, mind the postinstall script
+
 COPY . .
 
 RUN npm run build
 
-COPY ./compiled .
-COPY ./public ./public
+RUN rm -r src
 
+# COPY ./compiled .
+# COPY ./public ./public
+
+# either --env PORT=$PORT -p $PORT:$PORT
+# or -p $PORT:4040
 # EXPOSE 4040
 CMD [ "node", "compiled/index.js" ]

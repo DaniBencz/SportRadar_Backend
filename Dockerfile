@@ -11,6 +11,8 @@ COPY . .
 
 RUN npm run build
 
+RUN rm -r src
+
 # COPY ./compiled .
 # COPY ./public ./public
 
