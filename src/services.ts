@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import {
-  IMatchRaw, IMatchProcessed, ITournaments,
+  IMatchRaw, IMatchProcessed, ITournaments, fn,
 } from './serviceTypes';
 
 const getTournaments = async (): Promise<unknown> => {
@@ -143,8 +143,6 @@ const logger = async <T>(data: T) => {
   return data;
 };
 
-// eslint-disable-next-line no-unused-vars
-type fn = (input: any) => Promise<unknown>;
 const pipe = (...fns: fn[]) => (val: any = {}) => fns.reduce(async (acc, cur) => cur(await acc), val);
 
 const getLastFiveMatchesGroupedByTournament = pipe(

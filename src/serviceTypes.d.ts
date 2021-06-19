@@ -40,3 +40,6 @@ export interface ITournament {
 export interface ITournaments {
   [tid: number]: ITournament;
 }
+
+// eslint-disable-next-line no-unused-vars
+export type fn = (input: any) => Promise<unknown>;
