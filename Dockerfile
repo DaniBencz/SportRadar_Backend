@@ -4,9 +4,7 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-# if using ci, mind the postinstall script
-# RUN npm ci --unsafe-perm
-RUN npm install
+RUN npm ci
 
 COPY . .
 
