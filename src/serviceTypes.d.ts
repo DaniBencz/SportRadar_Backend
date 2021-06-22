@@ -1,3 +1,49 @@
+export interface TournamentData {
+  _doc: string;
+  _id: number;
+  _sid: number;
+  _rcid: number;
+  _isk: number;
+  _tid: number;
+  _utid: number;
+  name: string;
+  abbr: string;
+  ground?: any;
+  friendly: boolean;
+  seasonid: number;
+  currentseason: number;
+  year: string;
+  seasontype: string;
+  seasontypename: string;
+  seasontypeunique: string;
+  livetable: number;
+  cuprosterid?: any;
+  roundbyround: boolean;
+  tournamentlevelorder: number;
+  tournamentlevelname: string;
+  outdated: boolean;
+  _sk: boolean;
+}
+
+interface UniqueTournament {
+  _doc: string;
+  _id: number;
+  _utid: number;
+  _sid: number;
+  _rcid: number;
+  name: string;
+  currentseason: number;
+  friendly: boolean;
+}
+
+type UniqueTournaments = {[key:string]: UniqueTournament}
+
+export type TournamentResponse = {
+  tournaments: TournamentData[];
+  uniquetournaments?: UniqueTournaments;
+  cuptrees?: any;
+};
+
 export interface IMatchRaw {
   _id: number,
   _tid: number,

@@ -1,24 +1,24 @@
 import fetch from 'node-fetch';
 import {
-  IMatchRaw, IMatchProcessed, ITournaments, fn,
+  TournamentResponse, IMatchRaw, IMatchProcessed, ITournaments, fn,
 } from './serviceTypes';
 
-const getTournaments = async (): Promise<unknown> => {
+const getTournaments = async (): Promise<TournamentResponse> => {
   const uri = 'https://cp.fn.sportradar.com/common/en/Etc:UTC/gismo/config_tournaments/1/17';
   const tournamentsResponse = await fetch(uri);
   const tournamentsJson = await tournamentsResponse.json();
   return tournamentsJson.doc[0].data;
 };
 
-const getTournamentIDsAndNames = async (data: any): Promise<{ [key: number]: string; }> => {
+const getTournamentIDsAndNames = async (data: TournamentResponse): Promise<{ [key: number]: string; }> => {
   const {
     tournaments,
     uniquetournaments,
     cuptrees,
   } = data;
 
-  const tournamentIDsAndNames: { [key: number]: string; } = tournaments.reduce(
-    (acc: { _id: number, name: string; }, cur: { _id: number, name: string; }) => ({ ...acc, ...{ [cur._id]: cur.name } }), {},
+  const tournamentIDsAndNames: Record<number, string> = tournaments.reduce(
+    (acc: Record<number, string>, cur) => ({ ...acc, ...{ [cur._id]: cur.name } }), {},
   );
 
   if (uniquetournaments) {
@@ -65,8 +65,8 @@ const filterMatchesDataFromTournamentData = async (detailedTournamentData: any[]
         });
         return [...acc, newMatches];
       }
-      return acc;
-    } return acc;
+    }
+    return acc;
   }, []);
 
 const pushAllMatchesInOneSingleArray = async (matchesGroupedByTournament: IMatchRaw[][]) => matchesGroupedByTournament
